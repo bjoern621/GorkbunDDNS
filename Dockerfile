@@ -23,6 +23,6 @@ COPY --from=go-build /app/start-gorkbunddns ./
 CMD [ "/app/start-gorkbunddns" ]
 
 # Required environment variables
-ENV DOMAINS=example.com,sub.example.com,*.example.com APIKEY=pk1_xyz SECRETKEY=sk1_xyz
+# ENV DOMAINS=example.com,sub.example.com,*.example.com APIKEY=pk1_xyz SECRETKEY=sk1_xyz
 # Optional environment variables
-ENV TIMEOUT=600 MULTIPLE_RECORDS=skip IPV4=true IPV6=true
+# ENV TIMEOUT=600 MULTIPLE_RECORDS=skip IPV4=true IPV6=true
