@@ -40,7 +40,8 @@ func validateEnvironment() (apikey string, secretkey string, timeoutSeconds int)
 
 	timeout, present := env.ReadOptionalEnv(timeoutSecondsEnvKey)
 	if present {
-		timeoutSeconds, err := strconv.Atoi(timeout)
+		var err error
+		timeoutSeconds, err = strconv.Atoi(timeout)
 		if err != nil {
 			logger.Errorf("Environment variable %s must be a number. Was: %s", timeoutSecondsEnvKey, timeout)
 			assert.Never()
