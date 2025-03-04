@@ -22,7 +22,7 @@ type _DNSEditRequest struct {
 // editRecord updates the record matching id.
 // The subdomain, ?rootDomain? and IP will be changed accordingly.
 // After execution one record will point the IP. Note: this doesn't mean, that the edit was successful, neither that the record matching id will point to the IP.
-func editRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string, id string) {
+func editRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string, id string, oldIP string) {
 	requestBody := _DNSEditRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
 	jsonBody, err := json.Marshal(requestBody)
 	assert.IsNil(err)
@@ -50,5 +50,5 @@ func editRecord(subdomain string, rootDomain string, recordType string, newIP st
 		return
 	}
 
-	log.Printf("%s-Record of %s.%s updated to %s.", recordType, subdomain, rootDomain, newIP)
+	log.Printf("%s-Record of %s.%s updated: %s -> %s.", recordType, subdomain, rootDomain, oldIP, newIP)
 }

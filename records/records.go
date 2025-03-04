@@ -56,13 +56,14 @@ func Update(apikey string, secretkey string) {
 			case 0:
 				createRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey)
 			case 1:
-				if activeRecordIDs[0].IP == currentIP {
+				oldRecord := activeRecordIDs[0]
+				if oldRecord.IP == currentIP {
 					// TODO: %s.%s returns .example.de for [] and example.de, expected: example.com, fix with getFQDNString(subdomain, rootDomain)
 					log.Printf("%s-Record of %s.%s is up to date.", recordType, subdomain, rootDomain)
 					continue
 				}
 
-				editRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey, activeRecordIDs[0].ID)
+				editRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey, oldRecord.ID, oldRecord.IP)
 			default:
 				logger.Warnf("Multiple active %s-Records found for %s.%s. Please clean up the DNS records in the Porkbun WebGUI or set the environment variable %s=%s to automatically unify them.",
 					recordType, subdomain, rootDomain, mulRecordsEnvKey, mulRecordsUnifyValue)
