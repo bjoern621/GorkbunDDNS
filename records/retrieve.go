@@ -28,9 +28,8 @@ type retrievedRecord struct {
 	IP string
 }
 
-// retrieveRecords gets the active record IDs and their associtated IPs for a given FQDN and record type.
+// retrieveRecords gets the active record IDs and their associated IPs for a given FQDN and record type.
 // There may be zero, one, or multiple active records, each with different answers.
-// If something fails, success is set to false.
 func retrieveRecords(subdomain string, rootDomain string, recordType string, apikey string, secretkey string) ([]retrievedRecord, error) {
 	requestBody := shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}
 	jsonBody, err := json.Marshal(requestBody)
