@@ -88,7 +88,7 @@ func testApiKeys(apikey string, secretkey string) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		prettyJSON := util.JSONResponseBodyToPrettyByteArray(resp.Body)
 
 		logger.Errorf("Environment variable %s or %s is invalid:\n%s", apikeyEnvKey, secretkeyEnvKey, prettyJSON)

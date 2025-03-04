@@ -25,7 +25,7 @@ type _DNSEditRequest struct {
 func editRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string, id string) {
 	requestBody := _DNSEditRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
 	jsonBody, err := json.Marshal(requestBody)
-	assert.IsNil(err, "could not encode data to JSON")
+	assert.IsNil(err)
 
 	var resp *http.Response
 	totalTries := 3
@@ -45,7 +45,7 @@ func editRecord(subdomain string, rootDomain string, recordType string, newIP st
 		return
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		logger.Warnf("Could not update %s-Record of %s.%s. Skipping (sub)domain.", recordType, subdomain, rootDomain)
 		return
 	}

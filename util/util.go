@@ -10,7 +10,7 @@ import (
 
 func JSONResponseBodyToPrettyByteArray(reader io.Reader) []byte {
 	responseBody, err := io.ReadAll(reader)
-	assert.IsNil(err, "Can't think of a way this fails here.")
+	assert.IsNil(err)
 
 	var responseJsonPretty []byte
 

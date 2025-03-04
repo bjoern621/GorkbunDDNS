@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"bjoernblessin.de/gorkbunddns/internal"
 	"bjoernblessin.de/gorkbunddns/util/assert"
 	"bjoernblessin.de/gorkbunddns/util/env"
 	"bjoernblessin.de/gorkbunddns/util/logger"
@@ -23,8 +24,11 @@ func Update(apikey string, secretkey string) {
 
 	domains := strings.Split(domainsString, ",")
 
-	// todo: get current ip
-	currentIP := "2.2.2.2"
+	currentIP, err := internal.GetFromFritzBox("ipv4")
+	if err != nil {
+		logger.Warnf("Retrieving current WAN IP via FRITZ!Box failed.")
+		return
+	}
 
 	recordTypes := []string{}
 	if value, present := env.ReadOptionalEnv(ipv4EnvKey); value == "true" || present == false {
@@ -42,8 +46,8 @@ func Update(apikey string, secretkey string) {
 		}
 
 		for _, recordType := range recordTypes {
-			activeRecordIDs, success := retrieveRecords(subdomain, rootDomain, recordType, apikey, secretkey)
-			if success == false {
+			activeRecordIDs, err := retrieveRecords(subdomain, rootDomain, recordType, apikey, secretkey)
+			if err != nil {
 				logger.Warnf("Skipping %s-Record update of %s because retrieval of active records failed.", recordType, fqdn)
 				continue
 			}
@@ -53,6 +57,7 @@ func Update(apikey string, secretkey string) {
 				createRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey)
 			case 1:
 				if activeRecordIDs[0].IP == currentIP {
+					// TODO: %s.%s returns .example.de for [] and example.de, expected: example.com, fix with getFQDNString(subdomain, rootDomain)
 					log.Printf("%s-Record of %s.%s is up to date.", recordType, subdomain, rootDomain)
 					continue
 				}
@@ -70,7 +75,7 @@ func Update(apikey string, secretkey string) {
 // FQDN is guaranteed to match ^.*[a-zA-Z0-9]\\.[a-zA-Z]{2,}$.
 func isFQDNValid(fqdn string) (valid bool, subdomain string, rootDomain string) {
 	matched, err := regexp.MatchString("^.*[a-zA-Z0-9]\\.[a-zA-Z]{2,}$", fqdn)
-	assert.IsNil(err, "regex match should only fail if regex is invalid")
+	assert.IsNil(err)
 	if !matched {
 		return false, "", ""
 	}
@@ -80,4 +85,8 @@ func isFQDNValid(fqdn string) (valid bool, subdomain string, rootDomain string) 
 	subdomain = strings.Join(domainParts[:len(domainParts)-2], ".")
 
 	return true, subdomain, rootDomain
+}
+
+func getFQDNString(subdomain string, rootDomain string) string {
+	return "abc"
 }
