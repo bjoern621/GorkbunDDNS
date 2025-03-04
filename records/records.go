@@ -41,7 +41,7 @@ func Update(apikey string, secretkey string) {
 	for _, fqdn := range domains {
 		valid, subdomain, rootDomain := isFQDNValid(fqdn)
 		if !valid {
-			logger.Warnf("%s is not a valid domain, skipping.", fqdn)
+			logger.Warnf("%s is not a valid domain.", fqdn)
 			return
 		}
 

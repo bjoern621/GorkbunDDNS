@@ -41,12 +41,12 @@ func editRecord(subdomain string, rootDomain string, recordType string, newIP st
 	}
 
 	if err != nil {
-		logger.Warnf("All attempts failed. Skipping (sub)domain.")
+		logger.Warnf("All attempts failed.")
 		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Warnf("Could not update %s-Record of %s.%s. Skipping (sub)domain.", recordType, subdomain, rootDomain)
+		logger.Warnf("Could not update %s-Record of %s.%s.", recordType, subdomain, rootDomain)
 		return
 	}
 
