@@ -39,12 +39,13 @@ func retrieveRecords(subdomain string, rootDomain string, recordType string, api
 	resp, err := http.Post(fmt.Sprintf("https://api.porkbun.com/api/json/v3/dns/retrieveByNameType/%s/%s/%s",
 		rootDomain, recordType, subdomain), "application/json", bytes.NewReader(jsonBody))
 	if err != nil {
-		return []retrievedRecord{}, fmt.Errorf("could not retrieve currently active %s-Records for %s.%s. %w", recordType, subdomain, rootDomain, err)
+		return []retrievedRecord{}, fmt.Errorf("Could not retrieve currently active %s-Records for %s.%s. %w", recordType, subdomain, rootDomain, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return []retrievedRecord{}, fmt.Errorf("something unexpected happened while retrieving active %s-Records for %s.%s.", recordType, subdomain, rootDomain)
+		// May happen! For example: 503 Service Temporarily Unavailable
+		return []retrievedRecord{}, fmt.Errorf("Something unexpected happened while retrieving active %s-Records for %s.%s.", recordType, subdomain, rootDomain)
 	}
 
 	var response retrieveResponse
