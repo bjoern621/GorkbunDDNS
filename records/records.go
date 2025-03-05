@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"bjoernblessin.de/gorkbunddns/internal"
 	"bjoernblessin.de/gorkbunddns/util/assert"
 	"bjoernblessin.de/gorkbunddns/util/env"
 	"bjoernblessin.de/gorkbunddns/util/logger"
+	"bjoernblessin.de/gorkbunddns/wanip"
 )
 
 const DomainsEnvKey = "DOMAINS"
@@ -24,18 +24,36 @@ func Update(apikey string, secretkey string) {
 
 	domains := strings.Split(domainsString, ",")
 
-	currentIP, err := internal.GetFromFritzBox("ipv4")
-	if err != nil {
-		logger.Warnf("Retrieving current WAN IP via FRITZ!Box failed.")
-		return
-	}
-
-	recordTypes := []string{}
+	selectedIPVersionInfos := []struct {
+		ipProtocol string
+		recordType string
+		currentIP  string
+	}{}
 	if value, present := env.ReadOptionalEnv(ipv4EnvKey); value == "true" || present == false {
-		recordTypes = append(recordTypes, "A") // Either user set IPV4=true or he didn't set it at all (standard value)
+		// Either user set IPV4=true or he didn't set it at all (standard value)
+		currentIP, err := wanip.GetFromFritzBox("ipv4")
+		if err != nil {
+			logger.Warnf("Retrieving current WAN IPv4 via FRITZ!Box failed.")
+		} else {
+			selectedIPVersionInfos = append(selectedIPVersionInfos, struct {
+				ipProtocol string
+				recordType string
+				currentIP  string
+			}{ipProtocol: "ipv4", recordType: "A", currentIP: currentIP})
+		}
 	}
 	if value, _ := env.ReadOptionalEnv(ipv6EnvKey); value == "true" {
-		recordTypes = append(recordTypes, "AAAA") // The user set IPV6=true explicitly
+		// The user set IPV6=true explicitly
+		currentIP, err := wanip.GetFromFritzBox("ipv6")
+		if err != nil {
+			logger.Warnf("Retrieving current WAN IPv6 via FRITZ!Box failed.")
+		} else {
+			selectedIPVersionInfos = append(selectedIPVersionInfos, struct {
+				ipProtocol string
+				recordType string
+				currentIP  string
+			}{ipProtocol: "ipv6", recordType: "AAAA", currentIP: currentIP})
+		}
 	}
 
 	for _, fqdn := range domains {
@@ -45,28 +63,28 @@ func Update(apikey string, secretkey string) {
 			return
 		}
 
-		for _, recordType := range recordTypes {
-			activeRecordIDs, err := retrieveRecords(subdomain, rootDomain, recordType, apikey, secretkey)
+		for _, IPVersionInfo := range selectedIPVersionInfos {
+			activeRecordIDs, err := retrieveRecords(subdomain, rootDomain, IPVersionInfo.recordType, apikey, secretkey)
 			if err != nil {
-				logger.Warnf("Skipping %s-Record update of %s because retrieval of active records failed.", recordType, fqdn)
+				logger.Warnf("Skipping %s-Record update of %s because retrieval of active records failed.", IPVersionInfo.recordType, fqdn)
 				continue
 			}
 
 			switch len(activeRecordIDs) {
 			case 0:
-				createRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey)
+				createRecord(subdomain, rootDomain, IPVersionInfo.recordType, IPVersionInfo.currentIP, apikey, secretkey)
 			case 1:
 				oldRecord := activeRecordIDs[0]
-				if oldRecord.IP == currentIP {
+				if oldRecord.IP == IPVersionInfo.currentIP {
 					// TODO: %s.%s returns .example.de for [] and example.de, expected: example.com, fix with getFQDNString(subdomain, rootDomain)
-					log.Printf("%s-Record of %s.%s is up to date.", recordType, subdomain, rootDomain)
+					log.Printf("%s-Record of %s is up to date.", IPVersionInfo.recordType, fqdn)
 					continue
 				}
 
-				editRecord(subdomain, rootDomain, recordType, currentIP, apikey, secretkey, oldRecord.ID, oldRecord.IP)
+				editRecord(subdomain, rootDomain, IPVersionInfo.recordType, IPVersionInfo.currentIP, apikey, secretkey, oldRecord.ID, oldRecord.IP)
 			default:
-				logger.Warnf("Multiple active %s-Records found for %s.%s. Please clean up the DNS records in the Porkbun WebGUI or set the environment variable %s=%s to automatically unify them.",
-					recordType, subdomain, rootDomain, mulRecordsEnvKey, mulRecordsUnifyValue)
+				logger.Warnf("Multiple active %s-Records found for %s. Please clean up the DNS records in the Porkbun WebGUI or set the environment variable %s=%s to automatically unify them.",
+					IPVersionInfo.recordType, fqdn, mulRecordsEnvKey, mulRecordsUnifyValue)
 			}
 		}
 	}

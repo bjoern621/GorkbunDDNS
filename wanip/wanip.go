@@ -1,4 +1,4 @@
-package internal
+package wanip
 
 import (
 	"bytes"
@@ -21,9 +21,9 @@ type _IPv4ResponseEnvelope struct {
 type _IPv6ResponseEnvelope struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Body    struct {
-		GetExternalIPAddressResponse struct {
-			NewExternalIPAddress string `xml:"NewExternalIPv6Address"`
-		} `xml:"X_AVM_DE_GetExternalIPv6Address"`
+		X_AVM_DE_GetExternalIPv6AddressResponse struct {
+			NewExternalIPv6Address string `xml:"NewExternalIPv6Address"`
+		} `xml:"X_AVM_DE_GetExternalIPv6AddressResponse"`
 	} `xml:"Body"`
 }
 
@@ -57,11 +57,23 @@ func GetFromFritzBox(ipProtocol string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	var response _IPv4ResponseEnvelope
-	err = xml.NewDecoder(resp.Body).Decode(&response)
-	if err != nil {
-		return "", fmt.Errorf("couldn't parse XML %w", err)
-	}
+	if ipProtocol == "ipv4" {
+		var response _IPv4ResponseEnvelope
 
-	return response.Body.GetExternalIPAddressResponse.NewExternalIPAddress, nil
+		err = xml.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			return "", fmt.Errorf("couldn't parse XML %w", err)
+		}
+
+		return response.Body.GetExternalIPAddressResponse.NewExternalIPAddress, nil
+	} else {
+		var response _IPv6ResponseEnvelope
+
+		err = xml.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			return "", fmt.Errorf("couldn't parse XML %w", err)
+		}
+
+		return response.Body.X_AVM_DE_GetExternalIPv6AddressResponse.NewExternalIPv6Address, nil
+	}
 }
