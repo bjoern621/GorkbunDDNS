@@ -15,8 +15,8 @@ import (
 const DomainsEnvKey = "DOMAINS"
 const mulRecordsEnvKey = "MULTIPLE_RECORDS"
 const mulRecordsUnifyValue = "unify"
-const ipv4EnvKey = "IPV4"
-const ipv6EnvKey = "IPV6"
+const IPv4EnvKey = "IPV4"
+const IPv6EnvKey = "IPV6"
 
 func Update(apikey string, secretkey string) {
 	domainsString, present := os.LookupEnv(DomainsEnvKey)
@@ -29,7 +29,7 @@ func Update(apikey string, secretkey string) {
 		recordType string
 		currentIP  string
 	}{}
-	if value, present := env.ReadOptionalEnv(ipv4EnvKey); value == "true" || present == false {
+	if value, present := env.ReadOptionalEnv(IPv4EnvKey); value == "true" || present == false {
 		// Either user set IPV4=true or he didn't set it at all (standard value)
 		currentIP, err := wanip.GetFromFritzBox("ipv4")
 		if err != nil {
@@ -42,7 +42,7 @@ func Update(apikey string, secretkey string) {
 			}{ipProtocol: "ipv4", recordType: "A", currentIP: currentIP})
 		}
 	}
-	if value, _ := env.ReadOptionalEnv(ipv6EnvKey); value == "true" {
+	if value, _ := env.ReadOptionalEnv(IPv6EnvKey); value == "true" {
 		// The user set IPV6=true explicitly
 		currentIP, err := wanip.GetFromFritzBox("ipv6")
 		if err != nil {
