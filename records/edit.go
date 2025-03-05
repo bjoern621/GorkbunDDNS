@@ -12,7 +12,7 @@ import (
 	"bjoernblessin.de/gorkbunddns/util/logger"
 )
 
-type _DNSEditRequest struct {
+type editRequest struct {
 	shared.RequestCredentials
 	Name    string `json:"name"`
 	Type    string `json:"type"`
@@ -21,9 +21,9 @@ type _DNSEditRequest struct {
 
 // editRecord updates the record matching id.
 // The subdomain, ?rootDomain? and IP will be changed accordingly.
-// After execution one record will point the IP. Note: this doesn't mean, that the edit was successful, neither that the record matching id will point to the IP.
+// After execution and if the Porkbun server accepted the request, one record will point the IP. Note: this does not mean, that the edit was successful, neither that the record matching id will point to the IP.
 func editRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string, id string, oldIP string) {
-	requestBody := _DNSEditRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
+	requestBody := editRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
 	jsonBody, err := json.Marshal(requestBody)
 	assert.IsNil(err)
 
