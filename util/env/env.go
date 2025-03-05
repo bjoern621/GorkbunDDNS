@@ -3,6 +3,8 @@ package env
 import (
 	"os"
 
+	"slices"
+
 	"bjoernblessin.de/gorkbunddns/util/assert"
 	"bjoernblessin.de/gorkbunddns/util/logger"
 )
@@ -36,4 +38,18 @@ func ReadNonEmptyRequiredEnv(key string) string {
 // ReadOptionalEnv acts exactly like [os.LookupEnv].
 func ReadOptionalEnv(key string) (string, bool) {
 	return os.LookupEnv(key)
+}
+
+// ReadValidEnv reads a environment variable and checks if it matches at least one of validValues.
+//
+// A variable that isn't set equals the empty string.
+func ReadValidEnv(key string, validValues []string) string {
+	env, _ := ReadOptionalEnv(key)
+
+	if !slices.Contains(validValues, env) {
+		logger.Errorf("Environment variable %s must be one of %v but was %s.", key, validValues, env)
+		assert.Never()
+	}
+
+	return env
 }
