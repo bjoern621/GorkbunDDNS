@@ -1,5 +1,5 @@
 # GorkbunDDNS
-GorkbunDDNS is a dynamic DNS (DDNS) updater for Porkbun, designed to automatically update your DNS records with your current WAN IP address. It supports both IPv4 and IPv6 addresses periodically updating your DNS records.
+GorkbunDDNS is a dynamic DNS (DDNS) updater for [Porkbun↗](https://porkbun.com/), designed to automatically update your DNS records with your current WAN IP address. It supports both IPv4 and IPv6 addresses periodically updating your DNS records.
 
 ## Getting Started
 
