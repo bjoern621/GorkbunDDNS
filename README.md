@@ -9,7 +9,7 @@ GorkbunDDNS is a dynamic DNS (DDNS) updater for Porkbun, designed to automatical
 
 **Installation**
 
-The preferred way to run GorkbunDDNS is via a Docker image. Follow the steps below to get started:
+The preferred way to run GorkbunDDNS is via a Docker image. Follow the steps below to get started.
 
 1. **Pull the Docker image**
 ```console
