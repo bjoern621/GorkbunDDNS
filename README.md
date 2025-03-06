@@ -24,6 +24,9 @@ docker run -d \
   puma0243/gorkbunddns:latest
 ```
 
+> [!IMPORTANT]
+> You can generate a new API key and secret key pair at [Porkbun's API management page↗](https://porkbun.com/account/api).
+
 ### Environment Variables
 - `DOMAINS`: The domains to update. Format: `example.com,api.example.com,*.example.com` (required).
 - `APIKEY`: Your Porkbun API key (required).
