@@ -5,7 +5,7 @@ GorkbunDDNS is a dynamic DNS (DDNS) updater for [Porkbun↗](https://porkbun.com
 
 **Prerequisites**
 
-- Docker installed on your machine.
+- [Docker↗](https://www.docker.com/get-started/) installed on your machine.
 
 **Installation**
 
