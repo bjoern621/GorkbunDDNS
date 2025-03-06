@@ -40,7 +40,7 @@ func ReadOptionalEnv(key string) (string, bool) {
 	return os.LookupEnv(key)
 }
 
-// ReadValidEnv reads a environment variable and checks if it matches at least one of validValues.
+// ReadValidEnv reads an environment variable and checks if it matches at least one of validValues.
 //
 // A variable that isn't set equals the empty string.
 func ReadValidEnv(key string, validValues []string) string {
