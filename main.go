@@ -31,7 +31,8 @@ func main() {
 	runLoop(apikey, secretkey, timeoutSeconds)
 }
 
-// validateEnvironment checks all required environment variables and returns them for further use.
+// validateEnvironment checks environment variables for misconfiguration.
+// If one was found, an error message is printed and the program exits.
 func validateEnvironment() (apikey string, secretkey string, timeoutSeconds int) {
 	apikey = env.ReadNonEmptyRequiredEnv(apikeyEnvKey)
 	secretkey = env.ReadNonEmptyRequiredEnv(secretkeyEnvKey)
