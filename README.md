@@ -2,14 +2,13 @@
 GorkbunDDNS is a dynamic DNS (DDNS) updater for [Porkbun↗](https://porkbun.com/), written in [Go↗](https://go.dev/). It is designed to automatically update your DNS records with your current WAN IP address, supporting both IPv4 and IPv6 addresses. With a valid configuration, GorkbunDDNS is built to run reliably without crashing, ensuring DNS records are always up-to-date.
 
 ## Getting Started
+The preferred way to run GorkbunDDNS is via a Docker image. Follow the steps below to get started.
 
-**Prerequisites**
+### Prerequisites
 
 - [Docker↗](https://www.docker.com/get-started/) installed on your machine.
 
-**Installation**
-
-The preferred way to run GorkbunDDNS is via a Docker image. Follow the steps below to get started.
+### Installation
 
 1. **Pull the Docker image**
 ```console
@@ -25,9 +24,7 @@ docker run -d \
   puma0243/gorkbunddns:latest
 ```
 
-
-
-**Environment Variables**
+### Environment Variables
 - `DOMAINS`: The domains to update. Format: `example.com,api.example.com,*.example.com` (required).
 - `APIKEY`: Your Porkbun API key (required).
 - `SECRETKEY`: Your Porkbun secret key (required).
