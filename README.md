@@ -43,24 +43,3 @@ The program is configurable through **environment variables**:
 + `IPV4`: Enable or disable IPv4 updates (`true` or `false`, optional, default is `true`).
 + `IPV6`: Enable or disable IPv6 updates (`true` or `false`, optional, default is `false`).
 + `MULTIPLE_RECORDS`: How to handle multiple existing DNS records (`skip` or `unify`, optional, default is `skip`)
-
-## Contribution
-We welcome contributions to GorkbunDDNS! If you would like to contribute, please follow these steps:
-
-Fork the repository:
-
-Click the "Fork" button at the top right of this page to create a copy of this repository in your GitHub account.
-
-Clone your fork:
-
-Create a new branch:
-
-Make your changes and commit them:
-
-Push to the branch:
-
-Create a pull request:
-
-Open a pull request from your forked repository on GitHub to the main repository.
-
-Please ensure your code follows the project's coding standards and includes appropriate tests.
