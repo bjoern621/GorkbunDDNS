@@ -35,7 +35,7 @@ docker run -d \
 ```
 
 ### Configuration
-The program is fully configured through **environment variables**:
+The program is configurable through **environment variables**:
 - `DOMAINS`: The domains to update. Format: `example.com,api.example.com,*.example.com` (required).
 - `APIKEY`: Your Porkbun API key (required).
 - `SECRETKEY`: Your Porkbun secret key (required).
