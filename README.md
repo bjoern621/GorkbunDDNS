@@ -7,8 +7,15 @@ The preferred way to run GorkbunDDNS is via a Docker image. Follow the steps bel
 ### Prerequisites
 
 - [Docker↗](https://www.docker.com/get-started/) installed on your machine.
-
-> [!IMPORTANT]
+- <details>
+    <summary>API access is enabled for domains you want to update.</summary>
+  
+    API access can be managed on [Porkbun's Domain management site↗](https://porkbun.com/account/domainsSpeedy):
+    
+    ![api_access](https://github.com/user-attachments/assets/fa4cb507-f41c-406a-86dd-cecbc535c8e3)
+  </details>
+- You have a valid API / secret key pair.
+> [!NOTE]
 > You can generate a new API key and secret key pair at [Porkbun's API management page↗](https://porkbun.com/account/api).
 
 ### Installation
