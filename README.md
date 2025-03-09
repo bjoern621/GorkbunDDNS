@@ -41,5 +41,5 @@ The program is configurable through **environment variables**:
 - `SECRETKEY`: Your Porkbun secret key (required).
 + `TIMEOUT`: The interval in seconds between DNS updates (optional, default is `600`).
 + `IPV4`: Enable or disable IPv4 updates (`true` or `false`, optional, default is `true`).
-+ `IPV6`: Enable or disable IPv6 updates (`true` or `false`, optional, default is `false`).
++ `IPV6`: Enable or disable IPv6 updates (`host-ip`, `prefix-only`, `fritzbox-ip` or `false`, optional, default is `false`).
 + `MULTIPLE_RECORDS`: How to handle multiple existing DNS records (`skip` or `unify`, optional, default is `skip`)
