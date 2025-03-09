@@ -2,10 +2,14 @@ package wanip
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"time"
 
 	"bjoernblessin.de/gorkbunddns/util/assert"
 )
@@ -111,9 +115,6 @@ func GetIPv6PrefixFromFritzBox() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	value, _ := io.ReadAll(resp.Body)
-	fmt.Printf("%s\n", value)
-
 	var response _IPv6PrefixResponseEnvelope
 
 	err = xml.NewDecoder(resp.Body).Decode(&response)
@@ -122,4 +123,49 @@ func GetIPv6PrefixFromFritzBox() (string, error) {
 	}
 
 	return response.Body.X_AVM_DE_GetIPv6PrefixResponse.NewIPv6Prefix, nil
+}
+
+// GetGlobalUnicastIPv6 retrieves the unicast IPv6 address of the host machine.
+func GetGlobalUnicastIPv6() (string, error) {
+	IPv6OnlyTransport := &http.Transport{
+		DialContext: func(ctx context.Context, network string, addr string) (net.Conn, error) {
+			return net.Dial("tcp6", addr)
+		},
+	}
+
+	client := &http.Client{
+		Transport: IPv6OnlyTransport,
+		Timeout:   5 * time.Second,
+	}
+
+	resp, err := client.Get("https://api64.ipify.org?format=json")
+	if err != nil {
+		return "", fmt.Errorf("Failed to GET ipify service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var response struct {
+		IP string `json:"ip"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read response: %w", err)
+	}
+
+	return response.IP, nil
+}
+
+func GetGlobalUnicastIPv6_2() (string, error) {
+	resp, err := http.Get("https://api64.ipify.org")
+	if err != nil {
+		return "", fmt.Errorf("Failed to GET ipify service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	ip, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read response: %w", err)
+	}
+
+	return string(ip), nil
 }

@@ -59,7 +59,7 @@ func validateEnvironment() (apikey string, secretkey string, timeoutSeconds int)
 	env.ReadNonEmptyRequiredEnv(records.DomainsEnvKey)
 
 	IPv4Value := env.ReadValidEnv(records.IPv4EnvKey, []string{"", "true", "false"})
-	IPv6Value := env.ReadValidEnv(records.IPv6EnvKey, []string{"", "true", "false"})
+	IPv6Value := env.ReadValidEnv(records.IPv6EnvKey, []string{"", records.IPv6PrefixOnlyValue, records.IPv6HostIPValue, records.IPv6FritzBoxIPValue, "false"})
 	if IPv4Value == "false" && (IPv6Value == "" || IPv6Value == "false") {
 		logger.Errorf("Both IPv4 and IPv6 updates are disabled. No updates will be performed, so execution is unnecessary.")
 		assert.Never()
