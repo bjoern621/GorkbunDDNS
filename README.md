@@ -36,10 +36,12 @@ docker run -d \
 
 ### Configuration
 The program is configurable through **environment variables**:
-- `DOMAINS`: The domains to update. Format: `example.com,api.example.com,*.example.com` (required).
-- `APIKEY`: Your Porkbun API key (required).
-- `SECRETKEY`: Your Porkbun secret key (required).
-+ `TIMEOUT`: The interval in seconds between DNS updates (optional, default is `600`).
-+ `IPV4`: Enable or disable IPv4 updates (`true` or `false`, optional, default is `true`).
-+ `IPV6`: Enable or disable IPv6 updates (`host-ip`, `prefix-only`, `fritzbox-ip` or `false`, optional, default is `false`).
-+ `MULTIPLE_RECORDS`: How to handle multiple existing DNS records (`skip` or `unify`, optional, default is `skip`)
+|Variable|Description|Possible values|Required|Default|
+|---|---|---|---|---|
+|`DOMAINS`|The domains to update|A comma-separated list of [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name)s, e.g. `example.com,api.example.com,*.example.com`|✅|-|
+|`APIKEY`|Your Porkbun API key|e.g. `pk1_xyz`|✅|-|
+|`SECRETKEY`|Your Porkbun secret key|e.g. `sk1_xyz`|✅|-|
+|`TIMEOUT`|Interval in seconds between DNS updates|`TIMEOUT >= 1`|❌|`600`|
+|`IPV4`|Enable or disable IPv4 updates|`true`, `false`|❌|`true`|
+|`IPV6`|Enable or disable IPv6 updates|`host-ip`, `prefix-only`, `fritzbox-ip`, `false`|❌|`false`|
+|`MULTIPLE_RECORDS`|How to handle multiple existing DNS records|`skip`, `unify`|❌|`skip`|
