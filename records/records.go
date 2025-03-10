@@ -25,17 +25,15 @@ const IPv6FritzBoxIPValue = "fritzbox-ip"
 
 func Update(apikey string, secretkey string) {
 	domainsString, present := os.LookupEnv(DomainsEnvKey)
-	assert.Assert(present == true, "env should be present here because it's checked in main.validateEnvironment()")
+	assert.Assert(present, "env should be present here because it's checked in main.validateEnvironment()")
 
 	domains := strings.Split(domainsString, ",")
 
 	IPv4Value, IPv6ValuePresent := env.ReadOptionalEnv(IPv4EnvKey)
-	IPv6Value, _ := env.ReadOptionalEnv(IPv6EnvKey)
-
 	var currentIPv4 string
 	var IPv4Err error
 
-	if IPv4Value == "true" || IPv6ValuePresent == false {
+	if IPv4Value == "true" || !IPv6ValuePresent {
 		// Either user set IPV4=true or he didn't set it at all (standard value)
 		currentIPv4, IPv4Err = wanip.GetFromFritzBox("ipv4")
 		if IPv4Err != nil {
@@ -43,6 +41,7 @@ func Update(apikey string, secretkey string) {
 		}
 	}
 
+	IPv6Value, _ := env.ReadOptionalEnv(IPv6EnvKey)
 	var currentFritzboxIPv6, currentHostIPv6, currentIPv6Prefix string
 	var IPv6Err error
 
@@ -74,20 +73,18 @@ func Update(apikey string, secretkey string) {
 
 		subdomain, rootDomain := getSubAndRootDomain(fqdn)
 
-		// TODO test ipv4/6err
-
-		if (IPv4Value == "true" || IPv6ValuePresent == false) && IPv4Err != nil {
+		if (IPv4Value == "true" || !IPv6ValuePresent) && IPv4Err == nil {
 			assert.Assert(currentIPv4 != "", "currentIPv4 should be set here because it's checked in the beginning of this function")
 			tryUpdateRecordWithConstIP(currentIPv4, "A", fqdn, subdomain, rootDomain, apikey, secretkey)
 		}
 
-		if IPv6Value == IPv6FritzBoxIPValue && IPv6Err != nil {
+		if IPv6Value == IPv6FritzBoxIPValue && IPv6Err == nil {
 			assert.Assert(currentFritzboxIPv6 != "", "currentFritzboxIPv6 should be set here because it's checked in the beginning of this function")
 			tryUpdateRecordWithConstIP(currentFritzboxIPv6, "AAAA", fqdn, subdomain, rootDomain, apikey, secretkey)
-		} else if IPv6Value == IPv6HostIPValue && IPv6Err != nil {
+		} else if IPv6Value == IPv6HostIPValue && IPv6Err == nil {
 			assert.Assert(currentHostIPv6 != "", "currentHostIPv6 should be set here because it's checked in the beginning of this function")
 			tryUpdateRecordWithConstIP(currentHostIPv6, "AAAA", fqdn, subdomain, rootDomain, apikey, secretkey)
-		} else if IPv6Value == IPv6PrefixOnlyValue && IPv6Err != nil {
+		} else if IPv6Value == IPv6PrefixOnlyValue && IPv6Err == nil {
 			assert.Assert(currentIPv6Prefix != "", "currentIPv6Prefix should be set here because it's checked in the beginning of this function")
 			tryUpdateRecordWithIPv6Prefix(currentIPv6Prefix, fqdn, subdomain, rootDomain, apikey, secretkey)
 		}
