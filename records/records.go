@@ -1,13 +1,17 @@
 package records
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
 
+	"bjoernblessin.de/gorkbunddns/shared"
 	"bjoernblessin.de/gorkbunddns/util/assert"
 	"bjoernblessin.de/gorkbunddns/util/env"
 	"bjoernblessin.de/gorkbunddns/util/logger"
@@ -144,31 +148,41 @@ func tryUpdateRecordWithIPv6Prefix(currentIPv6Prefix string, fqdn string, subdom
 	}
 }
 
-// combineIPv6PrefixAndInterfaceID combines an IPv6 prefix and an abitrary IPv6 address to a full IPv6 address.
-// Example: combineIPv6PrefixAndInterfaceID("2001:db8::", "::1234:5678:90ab:cdef:0123") returns "2001:db8::5678:90ab:cdef:0123".
-// Example: combineIPv6PrefixAndInterfaceID("2001:db8::", "fe80:efef:db8:1234:5678:90ab:cdef:0123") returns "2001:db8::5678:90ab:cdef:0123".
-// Example: combineIPv6PrefixAndInterfaceID("2001:efef:db8:1234:", "fe80:efef:db8:1234:5678:90ab:cdef:0123") returns "2001:efef:db8:1234:5678:90ab:cdef:0123".
-// TODO: Add tests for this function. Change implementation (e.g. account for different prefix lengths).
-func combineIPv6PrefixAndInterfaceID(prefix string, IPv6 string) string {
-	assert.Assert(strings.HasSuffix(prefix, "::"), "prefix should end with '::'")
+// combineIPv6PrefixAndInterfaceID combines an the prefix of an IPv6 address and the interface ID of another IPv6 address to a combined IPv6 address.
+// The IPv6 addresses should be RFC 5952 ("2001:db8::1") compliant.
+// The returned IPv6 address is also RFC 5952 compliant.
+// Example: combineIPv6PrefixAndInterfaceID("2001:db8::", "fe80:efef:db8:1234:5678:90ab:cdef:0123") returns "2001:db8::5678:90ab:cdef:123".
+func combineIPv6PrefixAndInterfaceID(prefixIPv6 string, interfaceIDIPv6 string) string {
+	prefixAddr := net.ParseIP(prefixIPv6)
+	assert.Assert(prefixAddr != nil, "prefixIPv6 should be a valid IP address")
+	prefixAddr = prefixAddr.To16()
+	assert.Assert(prefixAddr != nil, "prefixIPv6 should be a valid IPv6 address")
 
-	addr := net.ParseIP(IPv6)
-	assert.Assert(addr != nil, "IPv6 should be a valid IP address")
+	prefix := fmt.Sprintf("%x:%x:%x:%x",
+		uint16(prefixAddr[0])<<8|uint16(prefixAddr[1]),
+		uint16(prefixAddr[2])<<8|uint16(prefixAddr[3]),
+		uint16(prefixAddr[4])<<8|uint16(prefixAddr[5]),
+		uint16(prefixAddr[6])<<8|uint16(prefixAddr[7]),
+	)
 
-	addr = addr.To16()
-	assert.Assert(addr != nil, "IPv6 should be a valid IPv6 address")
+	interfaceIDAddr := net.ParseIP(interfaceIDIPv6)
+	assert.Assert(interfaceIDAddr != nil, "interfaceIDIPv6 should be a valid IP address")
+	interfaceIDAddr = interfaceIDAddr.To16()
+	assert.Assert(interfaceIDAddr != nil, "interfaceIDIPv6 should be a valid IPv6 address")
 
 	// Get the interface ID from the IPv6 address
 	// Example: 2001:db8:abcd:1234:5678:90ab:cdef:0123
 	interfaceID := fmt.Sprintf("%x:%x:%x:%x",
-		uint16(addr[8])<<8|uint16(addr[9]), // uint16(addr[8])<<8 = 0x5600, addr[9] = 0x78, => 0x5678
-		uint16(addr[10])<<8|uint16(addr[11]),
-		uint16(addr[12])<<8|uint16(addr[13]),
-		uint16(addr[14])<<8|uint16(addr[15]),
+		uint16(interfaceIDAddr[8])<<8|uint16(interfaceIDAddr[9]), // uint16(addr[8])<<8 = 0x5600, addr[9] = 0x78, => 0x5678
+		uint16(interfaceIDAddr[10])<<8|uint16(interfaceIDAddr[11]),
+		uint16(interfaceIDAddr[12])<<8|uint16(interfaceIDAddr[13]),
+		uint16(interfaceIDAddr[14])<<8|uint16(interfaceIDAddr[15]),
 	)
 
-	// Prepend prefix to interface ID
-	return fmt.Sprintf("%s%s", prefix[:len(prefix)-1], interfaceID)
+	netIP := net.ParseIP(fmt.Sprintf("%s:%s", prefix, interfaceID))
+	assert.Assert(netIP != nil, "combined IPv6 address should be a valid IP address")
+
+	return netIP.String()
 }
 
 // getSubAndRootDomain splits a fully qualified domain name into subdomain and root domain.
@@ -187,4 +201,125 @@ func isFQDNValid(fqdn string) bool {
 	assert.IsNil(err)
 
 	return matched
+}
+
+type retrievedRecord struct {
+	ID string
+	IP string
+}
+
+// retrieveRecords gets the active record IDs and their associated IPs for a given FQDN and record type.
+// There may be zero, one, or multiple active records, each with different answers.
+func retrieveRecords(subdomain string, rootDomain string, recordType string, apikey string, secretkey string) ([]retrievedRecord, error) {
+	type retrieveResponse struct {
+		Status  string `json:"status"`
+		Records []struct {
+			Id      string `json:"id"`
+			Name    string `json:"name"`
+			Type    string `json:"type"`
+			Content string `json:"content"`
+			Ttl     string `json:"ttl"`
+			Prio    string `json:"prio"`
+			Notes   string `json:"notes"`
+		} `json:"records"`
+	}
+
+	requestBody := shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}
+	jsonBody, err := json.Marshal(requestBody)
+	assert.IsNil(err)
+
+	resp, err := http.Post(fmt.Sprintf("https://api.porkbun.com/api/json/v3/dns/retrieveByNameType/%s/%s/%s",
+		rootDomain, recordType, subdomain), "application/json", bytes.NewReader(jsonBody))
+	if err != nil {
+		return []retrievedRecord{}, fmt.Errorf("Could not retrieve currently active %s-Records for %s.%s. %w", recordType, subdomain, rootDomain, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		// May happen! For example: 503 Service Temporarily Unavailable
+		return []retrievedRecord{}, fmt.Errorf("Something unexpected happened while retrieving active %s-Records for %s.%s.", recordType, subdomain, rootDomain)
+	}
+
+	var response retrieveResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return []retrievedRecord{}, fmt.Errorf("Porkbun server returned invalid JSON format while retrieving active %s-Records for %s.%s. %w", recordType, subdomain, rootDomain, err)
+	}
+
+	var records []retrievedRecord
+	for _, record := range response.Records {
+		records = append(records, retrievedRecord{ID: record.Id, IP: record.Content})
+	}
+
+	return records, nil
+}
+
+// createRecord request the Porkbun server to create a specific record.
+//
+// Valid recordTypes are "A", "MX", "CNAME", "ALIAS", "TXT", "NS", "AAAA", "SRV", "TLSA", "CAA", "HTTPS", "SVCB"
+func createRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string) {
+	type createRequest struct {
+		shared.RequestCredentials
+		Name    string `json:"name"`
+		Type    string `json:"type"`
+		Content string `json:"content"`
+	}
+
+	requestBody := createRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
+	jsonBody, err := json.Marshal(requestBody)
+	assert.IsNil(err)
+
+	resp, err := http.Post(fmt.Sprintf("https://api.porkbun.com/api/json/v3/dns/create/%s", rootDomain), "application/json", bytes.NewReader(jsonBody))
+	if err != nil {
+		logger.Warnf("Could not create %s-Record for %s.%s.", recordType, subdomain, rootDomain)
+		return
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Warnf("Could not create %s-Record for %s.%s.", recordType, subdomain, rootDomain)
+		return
+	}
+
+	log.Printf("%s-Record for %s.%s created. New IP: %s.", recordType, subdomain, rootDomain, newIP)
+}
+
+// editRecord updates the record matching id.
+// The subdomain, ?rootDomain? and IP will be changed accordingly.
+// After execution and if the Porkbun server accepted the request, one record will point the IP. Note: this does not mean, that the edit was successful, neither that the record matching id will point to the IP.
+func editRecord(subdomain string, rootDomain string, recordType string, newIP string, apikey string, secretkey string, id string, oldIP string) {
+	type editRequest struct {
+		shared.RequestCredentials
+		Name    string `json:"name"`
+		Type    string `json:"type"`
+		Content string `json:"content"`
+	}
+
+	requestBody := editRequest{RequestCredentials: shared.RequestCredentials{SecretAPIKey: secretkey, APIKey: apikey}, Name: subdomain, Type: recordType, Content: newIP}
+	jsonBody, err := json.Marshal(requestBody)
+	assert.IsNil(err)
+
+	var resp *http.Response
+	totalTries := 3
+
+	for i := 1; i <= totalTries; i++ {
+		resp, err = http.Post(fmt.Sprintf("https://api.porkbun.com/api/json/v3/dns/edit/%s/%s", rootDomain, id), "application/json", bytes.NewReader(jsonBody))
+		if err != nil {
+			logger.Warnf("Edit attempt %d/%d failed: %v", i, totalTries, err)
+		} else {
+			resp.Body.Close()
+			break
+		}
+	}
+
+	if err != nil {
+		logger.Warnf("All attempts failed.")
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Warnf("Could not update %s-Record of %s.%s.", recordType, subdomain, rootDomain)
+		return
+	}
+
+	log.Printf("%s-Record of %s.%s updated: %s -> %s.", recordType, subdomain, rootDomain, oldIP, newIP)
 }
