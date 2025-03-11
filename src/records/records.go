@@ -11,11 +11,11 @@ import (
 	"regexp"
 	"strings"
 
-	"bjoernblessin.de/gorkbunddns/shared"
-	"bjoernblessin.de/gorkbunddns/util/assert"
-	"bjoernblessin.de/gorkbunddns/util/env"
-	"bjoernblessin.de/gorkbunddns/util/logger"
-	"bjoernblessin.de/gorkbunddns/wanip"
+	"bjoernblessin.de/gorkbunddns/src/shared"
+	"bjoernblessin.de/gorkbunddns/src/util/assert"
+	"bjoernblessin.de/gorkbunddns/src/util/env"
+	"bjoernblessin.de/gorkbunddns/src/util/logger"
+	"bjoernblessin.de/gorkbunddns/src/wanip"
 )
 
 const DomainsEnvKey = "DOMAINS"

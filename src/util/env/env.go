@@ -5,8 +5,8 @@ import (
 
 	"slices"
 
-	"bjoernblessin.de/gorkbunddns/util/assert"
-	"bjoernblessin.de/gorkbunddns/util/logger"
+	"bjoernblessin.de/gorkbunddns/src/util/assert"
+	"bjoernblessin.de/gorkbunddns/src/util/logger"
 )
 
 // ReadRequiredEnv reads the environment variable named by key and returns the read variable.

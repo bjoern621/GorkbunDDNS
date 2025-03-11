@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	"bjoernblessin.de/gorkbunddns/util/assert"
+	"bjoernblessin.de/gorkbunddns/src/util/assert"
 )
 
 type _IPv4ResponseEnvelope struct {

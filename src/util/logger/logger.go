@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"bjoernblessin.de/gorkbunddns/util/assert"
+	"bjoernblessin.de/gorkbunddns/src/util/assert"
 )
 
 // Errorf prints an error message prefixed with "[ERROR] " and stops execution.

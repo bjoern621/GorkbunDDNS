@@ -3,17 +3,17 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"bjoernblessin.de/gorkbunddns/records"
-	"bjoernblessin.de/gorkbunddns/shared"
-	"bjoernblessin.de/gorkbunddns/util"
-	"bjoernblessin.de/gorkbunddns/util/assert"
-	"bjoernblessin.de/gorkbunddns/util/env"
-	"bjoernblessin.de/gorkbunddns/util/logger"
+	"bjoernblessin.de/gorkbunddns/src/records"
+	"bjoernblessin.de/gorkbunddns/src/shared"
+	"bjoernblessin.de/gorkbunddns/src/util/assert"
+	"bjoernblessin.de/gorkbunddns/src/util/env"
+	"bjoernblessin.de/gorkbunddns/src/util/logger"
 )
 
 const timeoutSecondsEnvKey string = "TIMEOUT"
@@ -96,11 +96,32 @@ func testApiKeys(apikey string, secretkey string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		prettyJSON := util.JSONResponseBodyToPrettyByteArray(resp.Body)
+		prettyJSON := _JSONResponseBodyToPrettyByteArray(resp.Body)
 
 		logger.Errorf("Environment variable %s or %s is invalid:\n%s", apikeyEnvKey, secretkeyEnvKey, prettyJSON)
 		assert.Never()
 	}
 
 	log.Printf("%s and %s successfully validated.", apikeyEnvKey, secretkeyEnvKey)
+}
+
+func _JSONResponseBodyToPrettyByteArray(reader io.Reader) []byte {
+	responseBody, err := io.ReadAll(reader)
+	assert.IsNil(err)
+
+	var responseJsonPretty []byte
+
+	var responseJson map[string]any
+	err = json.Unmarshal(responseBody, &responseJson)
+	if err != nil {
+		logger.Warnf("Porkbun server returned invalid JSON format while validating API keys.")
+		responseJsonPretty = responseBody
+	} else {
+		responseJsonPretty, err = json.MarshalIndent(responseJson, "", "    ")
+		if err != nil {
+			assert.Never("JSON encoding (marshalling) failed. This should only happen with channel, complex and function values, which we don't use.", err, responseJson)
+		}
+	}
+
+	return responseJsonPretty
 }
