@@ -70,7 +70,12 @@ func GetFromFritzBox(ipProtocol string) (string, error) {
 			return "", fmt.Errorf("Couldn't parse XML %w", err)
 		}
 
-		return response.Body.GetExternalIPAddressResponse.NewExternalIPAddress, nil
+		var IPv4 string = response.Body.GetExternalIPAddressResponse.NewExternalIPAddress
+		if IPv4 == "" {
+			return "", fmt.Errorf("Empty response from FritzBox.")
+		}
+
+		return IPv4, nil
 	} else {
 		var response _IPv6ResponseEnvelope
 
@@ -79,7 +84,12 @@ func GetFromFritzBox(ipProtocol string) (string, error) {
 			return "", fmt.Errorf("Couldn't parse XML %w", err)
 		}
 
-		return response.Body.X_AVM_DE_GetExternalIPv6AddressResponse.NewExternalIPv6Address, nil
+		var IPv6 string = response.Body.X_AVM_DE_GetExternalIPv6AddressResponse.NewExternalIPv6Address
+		if IPv6 == "" {
+			return "", fmt.Errorf("Empty response from FritzBox.")
+		}
+
+		return IPv6, nil
 	}
 }
 
@@ -122,7 +132,12 @@ func GetIPv6PrefixFromFritzBox() (string, error) {
 		return "", fmt.Errorf("Couldn't parse XML %w", err)
 	}
 
-	return response.Body.X_AVM_DE_GetIPv6PrefixResponse.NewIPv6Prefix, nil
+	var IPv6Prefix string = response.Body.X_AVM_DE_GetIPv6PrefixResponse.NewIPv6Prefix
+	if IPv6Prefix == "" {
+		return "", fmt.Errorf("Empty response from FritzBox.")
+	}
+
+	return IPv6Prefix, nil
 }
 
 // GetGlobalUnicastIPv6 retrieves the unicast IPv6 address of the host machine.
@@ -150,6 +165,10 @@ func GetGlobalUnicastIPv6() (string, error) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		return "", fmt.Errorf("Failed to read response: %w", err)
+	}
+
+	if response.IP == "" {
+		return "", fmt.Errorf("Empty response from ipify service.")
 	}
 
 	return response.IP, nil

@@ -33,11 +33,11 @@ func Update(apikey string, secretkey string) {
 
 	domains := strings.Split(domainsString, ",")
 
-	IPv4Value, IPv6ValuePresent := env.ReadOptionalEnv(IPv4EnvKey)
+	IPv4Value, IPv4ValuePresent := env.ReadOptionalEnv(IPv4EnvKey)
 	var currentIPv4 string
 	var IPv4Err error
 
-	if IPv4Value == "true" || !IPv6ValuePresent {
+	if IPv4Value == "true" || !IPv4ValuePresent {
 		// Either user set IPV4=true or he didn't set it at all (standard value)
 		currentIPv4, IPv4Err = wanip.GetFromFritzBox("ipv4")
 		if IPv4Err != nil {
@@ -77,7 +77,7 @@ func Update(apikey string, secretkey string) {
 
 		subdomain, rootDomain := getSubAndRootDomain(fqdn)
 
-		if (IPv4Value == "true" || !IPv6ValuePresent) && IPv4Err == nil {
+		if (IPv4Value == "true" || !IPv4ValuePresent) && IPv4Err == nil {
 			assert.Assert(currentIPv4 != "", "currentIPv4 should be set here because it's checked in the beginning of this function")
 			tryUpdateRecordWithConstIP(currentIPv4, "A", fqdn, subdomain, rootDomain, apikey, secretkey)
 		}
