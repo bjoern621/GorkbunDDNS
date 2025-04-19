@@ -1,4 +1,4 @@
-FROM golang:1.24.0 AS go-build
+FROM --platform=$BUILDPLATFORM golang:1.24 AS go-build
 WORKDIR /app
 
 COPY go.mod ./
@@ -6,7 +6,10 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build -o start-gorkbunddns
+ARG TARGETOS
+ARG TARGETARCH
+
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o start-gorkbunddns
 
 # Go build complete
 
